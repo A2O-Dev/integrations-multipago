@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gs1-registry-sync-app
+  namespace: gs1
+  labels:
+    project: gs1
+    service: gs1-registry-sync
+    type: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      project: gs1
+      service: gs1-registry-sync
+      type: app
+  template:
+    metadata:
+      labels:
+        project: gs1
+        service: gs1-registry-sync
+        type: app
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: gs1-registry-sync-app
+          image: a2odev/gs1-registry-sync:latest
+          resources:
+            requests:
+              memory: '250Mi'
+              cpu: '0.25'
+            limits:
+              memory: '500Mi'
+              cpu: '0.5'
+          envFrom:
+            - secretRef:
+                name: gs1-registry-sync
+            - secretRef:
+                name: gs1-shared
+          ports:
+            - containerPort: 3000

@@ -1,0 +1,111 @@
+services:
+  zoo_1:
+    container_name: zookeeper_1
+    image: zookeeper:3.7.2
+    restart: always
+    volumes:
+      - ./docker/zookeeper/zoo.cfg:/conf/zoo.cfg
+      - v_zoo_1:/data
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_MY_ID: 1
+
+  zoo_2:
+    container_name: zookeeper_2
+    image: zookeeper:3.7.2
+    restart: always
+    volumes:
+      - ./docker/zookeeper/zoo.cfg:/conf/zoo.cfg
+      - v_zoo_2:/data
+    ports:
+      - 2182:2181
+    environment:
+      ZOO_MY_ID: 2
+
+  zoo_3:
+    container_name: zookeeper_3
+    image: zookeeper:3.7.2
+    restart: always
+    volumes:
+      - ./docker/zookeeper/zoo.cfg:/conf/zoo.cfg
+      - v_zoo_3:/data
+    ports:
+      - 2183:2181
+    environment:
+      ZOO_MY_ID: 3
+
+  kafka_1:
+    container_name: kafka_1
+    image: bitnami/kafka:3.3.2
+    restart: always
+    ports:
+      - 9093:9093
+    volumes:
+      - kafka_data_1:/bitnami/kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zoo_3:2181/test,zoo_2:2181/test,zoo_1:2181/test
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka_1:9092,EXTERNAL://localhost:9093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - zoo_1
+      - zoo_2
+      - zoo_3
+
+  kafka_2:
+    container_name: kafka_2
+    image: bitnami/kafka:3.3.2
+    restart: always
+    ports:
+      - 9094:9094
+    volumes:
+      - kafka_data_2:/bitnami/kafka
+    environment:
+      - KAFKA_BROKER_ID=2
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zoo_3:2181/test,zoo_2:2181/test,zoo_1:2181/test
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka_2:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - zoo_1
+      - zoo_2
+      - zoo_3
+
+  kafka-ui:
+    container_name: kafka_ui
+    image: provectuslabs/kafka-ui:v0.7.2
+    ports:
+      - 8080:8080
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=test
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka_1:9092,kafka_2:9092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zoo_3:2181/test,zoo_2:2181/test,zoo_1:2181/test
+    depends_on:
+      - kafka_1
+      - kafka_2
+
+  database:
+    container_name: gs1-registry-sync-db
+    image: postgres:${POSTGRES_VERSION:-16.3-alpine}
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-gs1-registry-sync-password}
+      POSTGRES_DB: ${DB_NAME:-gs1_registry_sync}
+    volumes:
+      - gs1-registry-sync-db:/var/lib/postgresql/data
+
+volumes:
+  v_zoo_1:
+  v_zoo_2:
+  v_zoo_3:
+  kafka_data_1:
+  kafka_data_2:
+  gs1-registry-sync-db:

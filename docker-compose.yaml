@@ -91,16 +91,16 @@ services:
       - kafka_2
 
   database:
-    container_name: gs1-registry-sync-db
+    container_name: gs1-integrations-db
     image: postgres:${POSTGRES_VERSION:-16.3-alpine}
     restart: always
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-gs1-registry-sync-password}
-      POSTGRES_DB: ${DB_NAME:-gs1_registry_sync}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-gs1-integrations-password}
+      POSTGRES_DB: ${DB_NAME:-gs1_integrations}
     volumes:
-      - gs1-registry-sync-db:/var/lib/postgresql/data
+      - gs1-integrations-db:/var/lib/postgresql/data
 
 volumes:
   v_zoo_1:
@@ -108,4 +108,4 @@ volumes:
   v_zoo_3:
   kafka_data_1:
   kafka_data_2:
-  gs1-registry-sync-db:
+  gs1-integrations-db:

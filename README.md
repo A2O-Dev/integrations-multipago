@@ -1,6 +1,6 @@
-# GS1 - Registry Sync
+# GS1 - Integrations
 
-GS1 Microservice for System Synchronization with GS1 Platform.
+GS1 Microservice for Integrations Service.
 
 ## Installation
 
@@ -53,13 +53,13 @@ GS1 Microservice for System Synchronization with GS1 Platform.
 - Build docker image
 
   ```bash
-  docker build -t gs1-registry-sync --no-cache .
+  docker build -t gs1-integrations --no-cache .
   ```
 
 - Run docker container
 
   ```bash
-  docker run -d -p 80:3000 --name gs1-registry-sync gs1-registry-sync
+  docker run -d -p 80:3000 --name gs1-integrations gs1-integrations
   ```
 
 - Go to http://localhost
@@ -72,7 +72,7 @@ GS1 Microservice for System Synchronization with GS1 Platform.
   kubectl create namespace gs1
   ```
 
-- Create a persistent volume with size "10Gi" and labels; project: gs1 and service: gs1-registry-sync
+- Create a persistent volume with size "10Gi" and labels; project: gs1 and service: gs1-integrations
 
 - Create a Secret with name "gs1-shared" for next envinments vars:
 

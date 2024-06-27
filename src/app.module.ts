@@ -27,13 +27,13 @@ import { databaseOptions } from './config'
       if ((process.env.KAFKA_ENABLED ?? 'true') === 'true') {
         options = {
           client: {
-            clientId: `gs1-registry-sync-${uuidv4()}`,
+            clientId: `gs1-integrations-${uuidv4()}`,
             brokers: (process.env.KAFKA_BROKERS || '')
               .split(',')
               .filter((a) => a),
           },
           consumer: {
-            groupId: 'gs1-registry-sync',
+            groupId: 'gs1-integrations',
           },
         }
       }

@@ -25,9 +25,9 @@ RUN npm install pm2 --location=global
 
 COPY --from=builder /app/dist ./
 
-RUN adduser --disabled-password gs1-registry-sync
-RUN chown -R gs1-registry-sync:gs1-registry-sync ./
-USER gs1-registry-sync
+RUN adduser --disabled-password gs1-integrations
+RUN chown -R gs1-integrations:gs1-integrations ./
+USER gs1-integrations
 
 EXPOSE 3000
 

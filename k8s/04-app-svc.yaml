@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: gs1-registry-sync-app
+  name: gs1-integrations-app
   namespace: gs1
 spec:
   selector:
     project: gs1
-    service: gs1-registry-sync
+    service: gs1-integrations
     type: app
   ports:
     - protocol: TCP

@@ -175,7 +175,7 @@ services:
       - kafka_1
       - kafka_2
     volumes:
-      - ./logs:/usr/src/app/logs # Opcional: para persistir logs
+      - ./logs:/usr/src/app/logs
 
   kafka-topics-init:
     container_name: kafka-topics-init

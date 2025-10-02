@@ -37,45 +37,55 @@ services:
 
   kafka_1:
     container_name: kafka_1
-    image: bitnami/kafka:3.3.2
+    image: confluentinc/cp-kafka:7.6.1
     restart: always
     ports:
       - 9093:9093
-    volumes:
-      - kafka_data_1:/bitnami/kafka
     environment:
       - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zoo_3:2181/test,zoo_2:2181/test,zoo_1:2181/test
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka_1:9092,EXTERNAL://localhost:9093
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+      - KAFKA_ZOOKEEPER_CONNECT=zoo_1:2181,zoo_2:2181,zoo_3:2181
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_ADVERTISED_LISTENERS=CLIENT://kafka_1:9092,EXTERNAL://localhost:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
     depends_on:
       - zoo_1
       - zoo_2
       - zoo_3
+    healthcheck:
+      test:
+        ['CMD', 'kafka-topics', '--bootstrap-server', 'kafka_1:9092', '--list']
+      interval: 30s
+      timeout: 20s
+      retries: 10
+      start_period: 60s
 
   kafka_2:
     container_name: kafka_2
-    image: bitnami/kafka:3.3.2
+    image: confluentinc/cp-kafka:7.6.1
     restart: always
     ports:
       - 9094:9094
-    volumes:
-      - kafka_data_2:/bitnami/kafka
     environment:
       - KAFKA_BROKER_ID=2
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zoo_3:2181/test,zoo_2:2181/test,zoo_1:2181/test
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9094
-      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka_2:9092,EXTERNAL://localhost:9094
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+      - KAFKA_ZOOKEEPER_CONNECT=zoo_1:2181,zoo_2:2181,zoo_3:2181
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_LISTENERS=CLIENT://:9092,EXTERNAL://:9094
+      - KAFKA_ADVERTISED_LISTENERS=CLIENT://kafka_2:9092,EXTERNAL://localhost:9094
+      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
     depends_on:
       - zoo_1
       - zoo_2
       - zoo_3
+    healthcheck:
+      test:
+        ['CMD', 'kafka-topics', '--bootstrap-server', 'kafka_2:9092', '--list']
+      interval: 30s
+      timeout: 20s
+      retries: 10
+      start_period: 60s
 
   kafka-ui:
     container_name: kafka_ui
@@ -85,27 +95,111 @@ services:
     environment:
       - KAFKA_CLUSTERS_0_NAME=test
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka_1:9092,kafka_2:9092
-      - KAFKA_CLUSTERS_0_ZOOKEEPER=zoo_3:2181/test,zoo_2:2181/test,zoo_1:2181/test
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zoo_1:2181,zoo_2:2181,zoo_3:2181
     depends_on:
       - kafka_1
       - kafka_2
 
   database:
-    container_name: gs1-integrations-db
+    container_name: integrations-db
     image: postgres:${POSTGRES_VERSION:-16.3-alpine}
     restart: always
     ports:
-      - '5432:5432'
+      - '5433:5432'
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-gs1-integrations-password}
-      POSTGRES_DB: ${DB_NAME:-gs1_integrations}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-integrations_mutlipago}
     volumes:
-      - gs1-integrations-db:/var/lib/postgresql/data
+      - integrations-db:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U postgres -d ${DB_NAME:-integrations_mutlipago}',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: '30s'
+
+  integrations-app:
+    container_name: integrations-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '${PORT:-3000}:${PORT:-3000}'
+    environment:
+      # App
+      - APP_ENV=${APP_ENV}
+      - TZ=${TZ}
+      - PORT=${PORT:-3000}
+
+      # Database
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_SCHEMA=${DB_SCHEMA}
+
+      # Kafka
+      - KAFKA_ENABLED=${KAFKA_ENABLED}
+      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID}
+      - KAFKA_CONSUMER_CONNECTION_TIMEOUT=${KAFKA_CONSUMER_CONNECTION_TIMEOUT}
+      - KAFKA_CONSUMER_RETRIES=${KAFKA_CONSUMER_RETRIES}
+      - KAFKA_CONSUMER_RETRY_FACTOR=${KAFKA_CONSUMER_RETRY_FACTOR}
+      - KAFKA_CONSUMER_INITIAL_RETRY_TIME=${KAFKA_CONSUMER_INITIAL_RETRY_TIME}
+      - KAFKA_CONSUMER_SESSION_TIMEOUT=${KAFKA_CONSUMER_SESSION_TIMEOUT}
+      - KAFKA_CONSUMER_HEARTBEAT_INTERVAL=${KAFKA_CONSUMER_HEARTBEAT_INTERVAL}
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+
+      # Multipago
+      - MULTIPAGO_URL=${MULTIPAGO_URL}
+      - MULTIPAGO_PROVIDER=${MULTIPAGO_PROVIDER}
+      - MULTIPAGO_REFERENCE_STATUS=${MULTIPAGO_REFERENCE_STATUS}
+      - MULTIPAGO_SERVICE_CODE=${MULTIPAGO_SERVICE_CODE}
+      - MULTIPAGO_URL_CONFIRM=${MULTIPAGO_URL_CONFIRM}
+      - MULTIPAGO_URL_FAIL=${MULTIPAGO_URL_FAIL}
+      - MULTIPAGO_UID=${MULTIPAGO_UID}
+
+      # Cron Jobs
+      - ENABLED_CRON_JOB_EXECUTE_QUEUE_REGISTRIES=${ENABLED_CRON_JOB_EXECUTE_QUEUE_REGISTRIES}
+      - CRON_JOB_EXECUTE_QUEUE_REGISTRIES=${CRON_JOB_EXECUTE_QUEUE_REGISTRIES}
+      - QUEUE_REGISTRY_MAX_RETRIES=${QUEUE_REGISTRY_MAX_RETRIES}
+      - ENABLED_CRON_JOB_EXECUTE_PAY_ORDERS=${ENABLED_CRON_JOB_EXECUTE_PAY_ORDERS}
+      - CRON_JOB_EXECUTE_PAY_ORDERS=${CRON_JOB_EXECUTE_PAY_ORDERS}
+    depends_on:
+      - database
+      - kafka_1
+      - kafka_2
+    volumes:
+      - ./logs:/usr/src/app/logs # Opcional: para persistir logs
+
+  kafka-topics-init:
+    container_name: kafka-topics-init
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      kafka_1:
+        condition: service_healthy
+      kafka_2:
+        condition: service_healthy
+    command: |
+      bash -c "
+        echo 'Esperando a que Kafka esté completamente listo...' &&
+        sleep 20 &&
+        echo 'Creando topics de Multipago...' &&
+        kafka-topics --bootstrap-server kafka_1:9092 --create --if-not-exists --topic multipago_request_pay_order --partitions 3 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka_1:9092 --create --if-not-exists --topic multipago_pay_order_result --partitions 3 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka_1:9092 --create --if-not-exists --topic multipago_pay_order_completed --partitions 3 --replication-factor 1 &&
+        echo '=== Topics creados ===' &&
+        kafka-topics --bootstrap-server kafka_1:9092 --list
+      "
+    profiles: ['setup']
 
 volumes:
   v_zoo_1:
   v_zoo_2:
   v_zoo_3:
-  kafka_data_1:
-  kafka_data_2:
-  gs1-integrations-db:
+  integrations-db:

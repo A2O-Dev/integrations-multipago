@@ -16,9 +16,7 @@ export class ValidationPipe implements PipeTransform<any> {
     if (!metatype || !this.toValidate(metatype)) {
       return value
     }
-    this.logger.log(
-      `[Logbook] Validating Kafka Message: ${JSON.stringify(value)}`,
-    )
+    this.logger.log(`Validating Kafka Message: ${JSON.stringify(value)}`)
 
     const object = plainToInstance(metatype, value)
     const errors = await validate(object)

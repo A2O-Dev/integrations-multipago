@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { ClientsModule, Transport } from '@nestjs/microservices'
 import { CommonModule } from 'src/common/common.module'
 
@@ -11,9 +10,8 @@ import { getKafkaConfig } from 'src/config'
       {
         name: 'KAFKA_CLIENT',
         imports: [CommonModule],
-        inject: [ConfigService],
-        useFactory: async (configService: ConfigService) => {
-          const kafka = await getKafkaConfig(configService)
+        useFactory: async () => {
+          const kafka = getKafkaConfig()
           return {
             transport: Transport.KAFKA,
             options: { ...kafka.config, producerOnlyMode: true },

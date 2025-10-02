@@ -20,7 +20,7 @@ export class PayOrderService {
   async savePayOrder(payOrder: PayOrder): Promise<void> {
     await this.payOrderRepository.save(payOrder)
     this.logger.log(
-      `[Logbook] [quotation: ${_.get(payOrder, 'product_details.quotation_id', '')}] Pay Order with number ${payOrder.pay_order_number} successfully saved to the database`,
+      `Pay Order with number ${payOrder.pay_order_number} successfully saved to the database`,
     )
   }
 
@@ -31,7 +31,9 @@ export class PayOrderService {
     )
 
     if (payOrderValidationErrors) {
-      throw new Error('Validation errors detected for PayOrderDto')
+      throw new Error(
+        `Validation errors detected for PayOrderDto ${JSON.stringify(payOrderValidationErrors)}`,
+      )
     }
 
     return payOrderDto

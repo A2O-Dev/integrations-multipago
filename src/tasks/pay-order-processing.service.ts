@@ -1,7 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { CronJob } from 'cron'
-import { ConfigService } from '@nestjs/config'
 import { ClientKafka } from '@nestjs/microservices'
 
 import { MultipagoService, PayOrderService } from 'src/multipago/services'
@@ -17,7 +16,6 @@ export class PayOrderProcessingService implements OnModuleInit {
   private readonly logger = new Logger(PayOrderProcessingService.name)
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly payOrderService: PayOrderService,
     private readonly multipagoService: MultipagoService,

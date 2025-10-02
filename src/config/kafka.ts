@@ -1,20 +1,15 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import { parseBoolean } from 'src/utils'
-import { ConfigService } from '@nestjs/config'
 
-export const getKafkaConfig = async (configService: ConfigService) => {
-  const isEnabled = parseBoolean(
-    await configService.get('INTEGRATIONS_KAFKA_ENABLED', true),
-  )
+export const getKafkaConfig = () => {
+  const isEnabled = parseBoolean(process.env.KAFKA_ENABLED)
 
   if (!isEnabled) return { isEnabled: false }
 
-  const brokers = (await configService.get('KAFKA_BROKERS'))
-    .split(',')
-    .filter((a) => a)
-  const clientId = `gs1-integrations-${uuidv4()}`
-  const groupId = await configService.get('KAFKA_GROUP_ID', 'gs1-integrations')
+  const brokers = process.env.KAFKA_BROKERS.split(',').filter((a) => a)
+  const clientId = `integrations-${uuidv4()}`
+  const groupId = process.env.KAFKA_GROUP_ID
 
   return {
     isEnabled: true,
@@ -23,35 +18,26 @@ export const getKafkaConfig = async (configService: ConfigService) => {
         clientId,
         brokers,
         connectionTimeout: parseInt(
-          await configService.get('KAFKA_CONSUMER_CONNECTION_TIMEOUT', '10000'),
+          process.env.KAFKA_CONSUMER_CONNECTION_TIMEOUT,
           10,
         ),
       },
       consumer: {
         groupId,
         retry: {
-          retries: parseInt(
-            await configService.get('KAFKA_CONSUMER_RETRIES', '3'),
-            10,
-          ),
-          factor: parseInt(
-            await configService.get('KAFKA_CONSUMER_RETRY_FACTOR', '2'),
-            10,
-          ),
+          retries: parseInt(process.env.KAFKA_CONSUMER_RETRIES, 10),
+          factor: parseInt(process.env.KAFKA_CONSUMER_RETRY_FACTOR, 10),
           initialRetryTime: parseInt(
-            await configService.get(
-              'KAFKA_CONSUMER_INITIAL_RETRY_TIME',
-              '3000',
-            ),
+            process.env.KAFKA_CONSUMER_INITIAL_RETRY_TIME,
             10,
           ),
         },
         sessionTimeout: parseInt(
-          await configService.get('KAFKA_CONSUMER_SESSION_TIMEOUT', '100000'),
+          process.env.KAFKA_CONSUMER_SESSION_TIMEOUT,
           10,
         ),
         heartbeatInterval: parseInt(
-          await configService.get('KAFKA_CONSUMER_HEARTBEAT_INTERVAL', '10000'),
+          process.env.KAFKA_CONSUMER_HEARTBEAT_INTERVAL,
           10,
         ),
       },

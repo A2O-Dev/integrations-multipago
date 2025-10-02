@@ -62,11 +62,11 @@ export class MultipagoService {
       'Content-Type': 'application/json',
       Authorization: token,
     }
-    const quotationIdLog = `[quotation: ${_.get(payload, 'payment_data.item_selecteds[0].id', '')}]`
+    const correlationId = _.get(payload, 'correlation_id', '')
 
     try {
       this.logger.log(
-        `[Logbook] ${quotationIdLog} Sending POST request to API ${endpoint} with payload: ${JSON.stringify(payload)}`,
+        `Sending POST request to API ${endpoint} with payload: ${payload}`,
       )
       const response = await firstValueFrom(
         this.httpService.post(endpoint, payload, { headers }),
@@ -75,22 +75,18 @@ export class MultipagoService {
         throw new Error(`API returned error: ${JSON.stringify(response.data)}`)
       }
       this.logger.log(
-        `[Logbook] ${quotationIdLog} Response from API ${endpoint}: ${JSON.stringify(response.data)}`,
+        `Response from API ${endpoint}: ${JSON.stringify(response.data)}`,
       )
       return response.data.data
     } catch (error) {
       if (error instanceof AxiosError) {
         const responseData = error.response?.data || error.message
-        const errorMessage = `Error sending request to API ${endpoint}`
-        this.logger.error(
-          `[Logbook] ${quotationIdLog} ${errorMessage} ${JSON.stringify(responseData)}`,
-        )
+        const errorMessage = `Error sending request to API ${endpoint} with correlation_id ${correlationId}`
+        this.logger.error(`${errorMessage} ${JSON.stringify(responseData)}`)
         throw new Error(errorMessage)
       } else {
         const errorMessage = 'Unexpected error occurred'
-        this.logger.error(
-          `[Logbook] ${quotationIdLog} ${errorMessage} ${JSON.stringify(error)}`,
-        )
+        this.logger.error(`${errorMessage} ${JSON.stringify(error)}`)
         throw new Error(errorMessage)
       }
     }

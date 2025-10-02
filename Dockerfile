@@ -24,10 +24,11 @@ RUN npm install --production
 RUN npm install pm2 --location=global
 
 COPY --from=builder /app/dist ./
+COPY --from=builder /app/dist ./dist
 
-RUN adduser --disabled-password gs1-integrations
-RUN chown -R gs1-integrations:gs1-integrations ./
-USER gs1-integrations
+RUN adduser --disabled-password integrations
+RUN chown -R integrations:integrations ./
+USER integrations
 
 EXPOSE 3000
 

@@ -19,12 +19,10 @@ export class CustomServerKafka extends ServerKafka {
     const logger = this.logger
 
     logger.log(
-      `[Logbook] INFO [Consumer] Consuming Kafka message from: ${JSON.stringify(
-        {
-          topic,
-          partition,
-        },
-      )}`,
+      `INFO [Consumer] Consuming Kafka message from: ${JSON.stringify({
+        topic,
+        partition,
+      })}`,
     )
 
     try {

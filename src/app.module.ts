@@ -1,54 +1,31 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { ClientsModule, Transport } from '@nestjs/microservices'
-import { v4 as uuidv4 } from 'uuid'
 
 import { LoggerModule } from './logger/logger.module'
 import { AppController } from './app.controller'
+import { QueueModule } from './queue/queue.module'
+import { TasksModule } from './tasks/tasks.module'
+import { MultipagoModule } from './multipago/multipago.module'
+import { KafkaModule } from './kafka/kafka.module'
+import { ScheduleModule } from '@nestjs/schedule'
 import { databaseOptions } from './config'
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       ...databaseOptions,
       autoLoadEntities: true,
     }),
-    (() => {
-      const clients = []
-
-      let kafkaClient: any = {
-        name: 'KAFKA_CLIENT',
-        transport: Transport.KAFKA,
-      }
-
-      let options = null
-      if ((process.env.KAFKA_ENABLED ?? 'true') === 'true') {
-        options = {
-          client: {
-            clientId: `integrations-multipago-${uuidv4()}`,
-            brokers: (process.env.KAFKA_BROKERS || '')
-              .split(',')
-              .filter((a) => a),
-          },
-          consumer: {
-            groupId: 'integrations-multipago',
-          },
-        }
-      }
-
-      if (options !== null) {
-        kafkaClient = {
-          ...kafkaClient,
-          options,
-        }
-      }
-
-      clients.push(kafkaClient)
-      return ClientsModule.register(clients)
-    })(),
+    KafkaModule,
     LoggerModule,
+    QueueModule,
+    TasksModule,
+    MultipagoModule,
   ],
   controllers: [AppController],
 })

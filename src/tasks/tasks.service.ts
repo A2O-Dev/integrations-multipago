@@ -1,7 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { CronJob } from 'cron'
-import { ConfigService } from '@nestjs/config'
 import { ClientKafka } from '@nestjs/microservices'
 import _ = require('lodash')
 
@@ -34,7 +33,6 @@ export class TasksService implements OnModuleInit {
   private readonly logger = new Logger(TasksService.name)
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly queueRegistryService: QueueRegistryService,
     private readonly multipagoService: MultipagoService,
@@ -44,7 +42,7 @@ export class TasksService implements OnModuleInit {
 
   async onModuleInit() {
     const executeRegistriesJob = new CronJob(
-      process.env.CRON_JOB_EXECUTE_QUEUE_REGISTRIES_INTEGRATIONS,
+      process.env.CRON_JOB_EXECUTE_QUEUE_REGISTRIES,
       async () => await this.executeRegistries(),
       null,
       false,
@@ -57,7 +55,7 @@ export class TasksService implements OnModuleInit {
     )
 
     const enabled = parseBoolean(
-      process.env.ENABLED_CRON_JOB_EXECUTE_QUEUE_REGISTRIES_INTEGRATIONS,
+      process.env.ENABLED_CRON_JOB_EXECUTE_QUEUE_REGISTRIES,
     )
 
     if (enabled) {
@@ -78,7 +76,9 @@ export class TasksService implements OnModuleInit {
     this.logger.log(
       `Found ${registriesToExecute.length} queued registries for execution.`,
     )
-    this.logger.debug({ registriesToExecute })
+    if (registriesToExecute.length > 0) {
+      this.logger.debug({ registriesToExecute })
+    }
 
     for (const registryToExecute of registriesToExecute) {
       await this.executeQueueRegistry(registryToExecute)
@@ -95,7 +95,7 @@ export class TasksService implements OnModuleInit {
       this.logger.debug({ data: data })
 
       const payOrderDto = await this.payOrderService.validatePayOrder(
-        data.request_data,
+        data.payload,
       )
 
       const responseData = await this.multipagoService.sendRequest(
@@ -138,9 +138,7 @@ export class TasksService implements OnModuleInit {
       } as PayOrder)
     } catch (error) {
       this.logger.error(
-        `Error processing new multipago pay order with correlation_id: ${correlationId}. Error: ${JSON.stringify(
-          error.message,
-        )}`,
+        `Error processing new multipago pay order with correlation_id: ${correlationId}. Error: ${error.message}`,
       )
       throw error
     }

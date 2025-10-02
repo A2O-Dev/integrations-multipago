@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: gs1-integrations-db
-  namespace: gs1
+  name: integrations-db
+  namespace: integrations
 spec:
   selector:
-    project: gs1
-    service: gs1-integrations
+    project: integrations
+    service: integrations
     type: db
   ports:
     - protocol: TCP

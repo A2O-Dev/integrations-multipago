@@ -26,10 +26,7 @@ export class QueueRegistryService {
 
   async onModuleInit() {
     this.maxRetryCount = parseInt(
-      await this.configService.get(
-        'QUEUE_REGISTRY_MAX_RETRIES_INTEGRATIONS',
-        '3',
-      ),
+      await this.configService.get('QUEUE_REGISTRY_MAX_RETRIES', '3'),
     )
   }
 

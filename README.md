@@ -1,6 +1,6 @@
-# GS1 - Integrations
+# Integrations Multipago
 
-GS1 Microservice for Integrations Service.
+Microservice for Integrations Multipago Service.
 
 ## Installation
 
@@ -14,7 +14,7 @@ GS1 Microservice for Integrations Service.
 - [PostgreSQL](https://www.postgresql.org/)
 - [PM2](https://pm2.io/)
 
-### Development
+## Development
 
 - Install Dependencies
 
@@ -28,66 +28,73 @@ GS1 Microservice for Integrations Service.
   cp .env.example .env
   ```
 
-- Start docker services
+### Start Docker Services with Kafka
+
+- Configure .env
 
   ```bash
-  docker-compose up -d
+  DB_HOST=database
+  DB_PORT=5432
+  DB_NAME=integrations_multipago
+  DB_USERNAME=postgres
+  DB_PASSWORD=postgres
+  DB_SCHEMA=integrations
+
+  #Enable kafka
+  KAFKA_ENABLED=true
   ```
 
-- Start Server in Development Mode
+- Run docker compose
 
   ```bash
-  npm run start:dev
+  docker compose up -d --build --wait
+  ```
+
+- Create kafka topics
+
+  ```bash
+  docker compose --profile setup up kafka-topics-init
+  ```
+
+- Create Schema Database
+
+  ```bash
+  docker exec -it integrations-db psql -U postgres -d integrations_multipago -c "CREATE SCHEMA IF NOT EXISTS integrations";
   ```
 
 - Run migrations
 
   ```bash
+  docker exec integrations-app node ./node_modules/typeorm/cli migration:run -d ./config/database.js
+  ```
+
+### Start NestJS development mode
+
+- Configure .env
+
+  ```bash
+  DB_HOST=localhost
+  DB_PORT=5432
+  DB_NAME=integrations_multipago
+  DB_USERNAME=postgres
+  DB_PASSWORD=postgres
+  DB_SCHEMA=integrations
+
+  #Disable kafka
+  KAFKA_ENABLED=false
+  ```
+
+- Create Database 'integrations_multipago'
+- Create Schema 'integrations'
+- Run migrations
+
+  ```bash
+  npm run build
   npm run migration:run
   ```
 
-### Production
-
-#### Docker
-
-- Build docker image
+- Run app
 
   ```bash
-  docker build -t gs1-integrations --no-cache .
-  ```
-
-- Run docker container
-
-  ```bash
-  docker run -d -p 80:3000 --name gs1-integrations gs1-integrations
-  ```
-
-- Go to http://localhost
-
-#### Kubernetes
-
-- Create gs1 namespace
-
-  ```bash
-  kubectl create namespace gs1
-  ```
-
-- Create a persistent volume with size "10Gi" and labels; project: gs1 and service: gs1-integrations
-
-- Create a Secret with name "gs1-shared" for next envinments vars:
-
-  ```bash
-  KAFKA_BROKERS='localhost:9092,localhost:9093...'
-  ```
-
-- Create secrets: Edit your credentials
-
-  ```bash
-  cp k8s/00-secrets.yaml.example k8s/00-secrets.yaml
-  ```
-
-- Deploy k8s
-
-  ```bash
-  kubectl apply -f k8s
+  npm run start:dev
   ```

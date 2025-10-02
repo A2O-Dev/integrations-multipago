@@ -28,7 +28,7 @@ Microservice for Integrations Multipago Service.
   cp .env.example .env
   ```
 
-- Start Docker Services with Kafka
+## Start Docker Services with Kafka
 
 - Configure .env
 
@@ -50,10 +50,10 @@ Microservice for Integrations Multipago Service.
   docker compose up -d --build --wait
   ```
 
-- Create Kakfa topics
+- Create kafka topics
 
   ```bash
-    docker compose --profile setup up kafka-topics-init
+  docker compose --profile setup up kafka-topics-init
   ```
 
 - Create Schema Database
@@ -62,20 +62,13 @@ Microservice for Integrations Multipago Service.
   docker exec -it integrations-db psql -U postgres -d integrations_multipago -c "CREATE SCHEMA IF NOT EXISTS integrations";
   ```
 
-- Create Schema Database
+- Run migrations
 
   ```bash
   docker exec integrations-app node ./node_modules/typeorm/cli migration:run -d ./config/database.js
   ```
 
-- Run migrations
-
-  ```bash
-  npm run build
-  npm run migration:run
-  ```
-
-- Start NestJS development mode
+## Start NestJS development mode
 
 - Configure .env
 
@@ -91,8 +84,8 @@ Microservice for Integrations Multipago Service.
   KAFKA_ENABLED=false
   ```
 
-- Create Database integrations_multipago
-- Create Schema integrations
+- Create Database 'integrations_multipago'
+- Create Schema 'integrations'
 - Run migrations
 
   ```bash

@@ -14,7 +14,7 @@ Microservice for Integrations Multipago Service.
 - [PostgreSQL](https://www.postgresql.org/)
 - [PM2](https://pm2.io/)
 
-### Development
+## Development
 
 - Install Dependencies
 
@@ -28,7 +28,7 @@ Microservice for Integrations Multipago Service.
   cp .env.example .env
   ```
 
-## Start Docker Services with Kafka
+### Start Docker Services with Kafka
 
 - Configure .env
 
@@ -68,7 +68,7 @@ Microservice for Integrations Multipago Service.
   docker exec integrations-app node ./node_modules/typeorm/cli migration:run -d ./config/database.js
   ```
 
-## Start NestJS development mode
+### Start NestJS development mode
 
 - Configure .env
 
@@ -98,5 +98,3 @@ Microservice for Integrations Multipago Service.
   ```bash
   npm run start:dev
   ```
-
-- Go to http://localhost:3000
